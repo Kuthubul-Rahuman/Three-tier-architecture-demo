@@ -55,7 +55,7 @@ ratings: {}
 
 redis:
   # Storage class to use with redis statefulset.
-  storageClassName: gp2
+  storageClassName: default
 
 shipping: {}
 
