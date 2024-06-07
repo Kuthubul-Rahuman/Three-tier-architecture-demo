@@ -1,45 +1,50 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb
+  name: cart
   labels:
-    service: mongodb
+    service: cart
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: mongodb
+      service: cart
   template:
     metadata:
       labels:
-        service: mongodb
+        service: cart
     spec:
       {{ if .Values.psp.enabled }}
       serviceAccountName: robot-shop
       {{ end }}
       containers:
-      - name: mongodb
-        image: {{ .Values.image.repo }}/rs-mongodb:{{ .Values.image.version }}
+      - name: cart
+        image: {{ .Values.image.repo }}/rs-cart:{{ .Values.image.version }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        # agent networking access
+        env:
+          - name: INSTANA_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
         ports:
-        - containerPort: 27017
+        - containerPort: 8080
         resources:
           limits:
             cpu: 200m
-            memory: 200Mi
+            memory: 100Mi
           requests:
             cpu: 100m
-            memory: 100Mi
-      restartPolicy: Always
-      {{- with .Values.mongodb.affinity }}
+            memory: 50Mi
+      {{- with .Values.cart.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.mongodb.nodeSelector }}
+      {{- with .Values.cart.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.mongodb.tolerations }}
+      {{- with .Values.cart.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
