@@ -1,46 +1,49 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq
+  name: dispatch
   labels:
-    service: rabbitmq
+    service: dispatch
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: rabbitmq
+      service: dispatch
   template:
     metadata:
       labels:
-        service: rabbitmq
+        service: dispatch
     spec:
       {{ if .Values.psp.enabled }}
       serviceAccountName: robot-shop
       {{ end }}
       containers:
-      - name: rabbitmq
-        image: rabbitmq:3.7-management-alpine
+      - name: dispatch
+        image: {{ .Values.image.repo }}/rs-dispatch:{{ .Values.image.version }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        ports:
-        - containerPort: 5672
-        - containerPort: 15672
+        env:
+          # agent networking access
+          - name: INSTANA_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
         resources:
           limits:
             cpu: 200m
-            memory: 512Mi
+            memory: 100Mi
           requests:
             cpu: 100m
-            memory: 256Mi
+            memory: 50Mi
       restartPolicy: Always
-      {{- with .Values.rabbitmq.affinity }}
+      {{- with .Values.dispatch.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.rabbitmq.nodeSelector }}
+      {{- with .Values.dispatch.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.rabbitmq.tolerations }}
+      {{- with .Values.dispatch.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

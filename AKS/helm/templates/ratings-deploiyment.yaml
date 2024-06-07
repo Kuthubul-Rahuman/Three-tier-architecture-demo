@@ -1,46 +1,53 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq
+  name: ratings
   labels:
-    service: rabbitmq
+    service: ratings
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: rabbitmq
+      service: ratings
   template:
     metadata:
       labels:
-        service: rabbitmq
+        service: ratings
     spec:
       {{ if .Values.psp.enabled }}
       serviceAccountName: robot-shop
       {{ end }}
       containers:
-      - name: rabbitmq
-        image: rabbitmq:3.7-management-alpine
+      - name: ratings
+        image: {{ .Values.image.repo }}/rs-ratings:{{ .Values.image.version }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: 5672
-        - containerPort: 15672
+        - containerPort: 80
         resources:
           limits:
             cpu: 200m
-            memory: 512Mi
+            memory: 100Mi
           requests:
             cpu: 100m
-            memory: 256Mi
+            memory: 50Mi
+        readinessProbe:
+          httpGet:
+            path: /_health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
+          successThreshold: 1
       restartPolicy: Always
-      {{- with .Values.rabbitmq.affinity }}
+      {{- with .Values.ratings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.rabbitmq.nodeSelector }}
+      {{- with .Values.ratings.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.rabbitmq.tolerations }}
+      {{- with .Values.ratings.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

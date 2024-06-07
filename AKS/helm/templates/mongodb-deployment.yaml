@@ -1,46 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq
+  name: mongodb
   labels:
-    service: rabbitmq
+    service: mongodb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: rabbitmq
+      service: mongodb
   template:
     metadata:
       labels:
-        service: rabbitmq
+        service: mongodb
     spec:
       {{ if .Values.psp.enabled }}
       serviceAccountName: robot-shop
       {{ end }}
       containers:
-      - name: rabbitmq
-        image: rabbitmq:3.7-management-alpine
+      - name: mongodb
+        image: {{ .Values.image.repo }}/rs-mongodb:{{ .Values.image.version }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: 5672
-        - containerPort: 15672
+        - containerPort: 27017
         resources:
           limits:
             cpu: 200m
-            memory: 512Mi
+            memory: 200Mi
           requests:
             cpu: 100m
-            memory: 256Mi
+            memory: 100Mi
       restartPolicy: Always
-      {{- with .Values.rabbitmq.affinity }}
+      {{- with .Values.mongodb.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.rabbitmq.nodeSelector }}
+      {{- with .Values.mongodb.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.rabbitmq.tolerations }}
+      {{- with .Values.mongodb.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
